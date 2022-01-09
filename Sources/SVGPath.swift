@@ -197,16 +197,11 @@ public struct SVGPath: Hashable {
             case "-":
                 try processNumber()
                 number = "-"
-            case "a" ... "z":
+            case "a" ... "z", "A" ... "Z":
                 try processNumber()
                 try processCommand()
                 token = char
-                isRelative = true
-            case "A" ... "Z":
-                try processNumber()
-                try processCommand()
-                token = char
-                isRelative = false
+                isRelative = char > "Z"
             case " ", "\r", "\n", "\t", ",":
                 try processNumber()
             default:
