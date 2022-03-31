@@ -160,13 +160,25 @@ public struct SVGPath: Hashable {
             throw SVGError.unexpectedToken(number)
         }
 
+        func appendCommand(_ command: SVGCommand) {
+            let last = isRelative ? commands.last : nil
+            commands.append(command.relative(to: last))
+        }
+
         func processCommand() throws {
-            guard let token = token else {
+            guard let tkn = token else {
                 return
             }
             let command: SVGCommand
-            switch token {
-            case "m", "M": command = try moveTo()
+            switch tkn {
+            case "m", "M":
+                command = try moveTo()
+                if !numbers.isEmpty {
+                    appendCommand(command)
+                    if tkn == "m" { token = "l" }
+                    else if tkn == "M" { token = "L" }
+                    return try processCommand()
+                }
             case "l", "L": command = try lineTo()
             case "v", "V": command = try lineToVertical()
             case "h", "H": command = try lineToHorizontal()
@@ -176,10 +188,9 @@ public struct SVGPath: Hashable {
             case "s", "S": command = try cubicTo()
             case "a", "A": command = try arc()
             case "z", "Z": command = try end()
-            default: throw SVGError.unexpectedToken(String(token))
+            default: throw SVGError.unexpectedToken(String(tkn))
             }
-            let last = isRelative ? commands.last : nil
-            commands.append(command.relative(to: last))
+            appendCommand(command)
             if !numbers.isEmpty {
                 try processCommand()
             }
@@ -195,8 +206,12 @@ public struct SVGPath: Hashable {
                 }
                 number.append(".")
             case "-":
-                try processNumber()
-                number = "-"
+                if number.last != "e" {
+                    try processNumber()
+                    number = "-"
+                } else {
+                    number.append(Character(char))
+                }
             case "a" ... "z", "A" ... "Z":
                 try processNumber()
                 try processCommand()

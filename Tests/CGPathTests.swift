@@ -199,6 +199,26 @@ class CGPathTests: XCTestCase {
         cgPath.closeSubpath()
         XCTAssertEqual(.from(svgPath: svgPath), cgPath)
     }
+
+    func testScientificNotationNumbers() throws {
+        let svgPath = try SVGPath(string: "M150 0 L75 200e+0 225e-0 200 Z")
+        let cgPath = CGMutablePath()
+        cgPath.move(to: CGPoint(x: 150, y: 0))
+        cgPath.addLine(to: CGPoint(x: 75, y: -200))
+        cgPath.addLine(to: CGPoint(x: 225, y: -200))
+        cgPath.closeSubpath()
+        XCTAssertEqual(.from(svgPath: svgPath), cgPath)
+    }
+
+    func testImplicitLines() throws {
+        let svgPath = try SVGPath(string: "M150 0 75 200 225 200 Z")
+        let cgPath = CGMutablePath()
+        cgPath.move(to: CGPoint(x: 150, y: 0))
+        cgPath.addLine(to: CGPoint(x: 75, y: -200))
+        cgPath.addLine(to: CGPoint(x: 225, y: -200))
+        cgPath.closeSubpath()
+        XCTAssertEqual(.from(svgPath: svgPath), cgPath)
+    }
 }
 
 #endif
