@@ -92,4 +92,26 @@ class SVGPathTests: XCTestCase {
         ])
         XCTAssertEqual(svgPath, expected)
     }
+
+    func testScientificNotationNumbers() throws {
+        let svgPath = try SVGPath(string: "M150 0 L75 200e+0 225e-0 200 Z")
+        let expected = SVGPath(commands: [
+            .moveTo(.init(x: 150, y: 0)),
+            .lineTo(.init(x: 75, y: -200)),
+            .lineTo(.init(x: 225, y: -200)),
+            .end,
+        ])
+        XCTAssertEqual(svgPath, expected)
+    }
+
+    func testImplicitLines() throws {
+        let svgPath = try SVGPath(string: "M150 0 75 200 225 200 Z")
+        let expected = SVGPath(commands: [
+            .moveTo(.init(x: 150, y: 0)),
+            .lineTo(.init(x: 75, y: -200)),
+            .lineTo(.init(x: 225, y: -200)),
+            .end,
+        ])
+        XCTAssertEqual(svgPath, expected)
+    }
 }
