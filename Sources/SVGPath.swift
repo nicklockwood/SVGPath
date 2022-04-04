@@ -39,7 +39,7 @@ public struct SVGPath: Hashable {
     }
 
     public init(string: String) throws {
-        var token: UnicodeScalar?
+        var token: UnicodeScalar = " "
         var commands = [SVGCommand]()
         var numbers = ArraySlice<Double>()
         var number = ""
@@ -48,10 +48,10 @@ public struct SVGPath: Hashable {
         func assertArgs(_ count: Int) throws -> [Double] {
             if numbers.count < count {
                 throw SVGError
-                    .missingArgument(for: String(token!), expected: count)
+                    .missingArgument(for: String(token), expected: count)
             } else if !numbers.count.isMultiple(of: count) {
                 throw SVGError
-                    .unexpectedArgument(for: String(token!), expected: count)
+                    .unexpectedArgument(for: String(token), expected: count)
             }
             defer { numbers.removeFirst(count) }
             return Array(numbers.prefix(count))
@@ -166,17 +166,13 @@ public struct SVGPath: Hashable {
         }
 
         func processCommand() throws {
-            guard let tkn = token else {
-                return
-            }
             let command: SVGCommand
-            switch tkn {
+            switch token {
             case "m", "M":
                 command = try moveTo()
                 if !numbers.isEmpty {
                     appendCommand(command)
-                    if tkn == "m" { token = "l" }
-                    else if tkn == "M" { token = "L" }
+                    token = UnicodeScalar(token.value - 1)!
                     return try processCommand()
                 }
             case "l", "L": command = try lineTo()
@@ -188,7 +184,8 @@ public struct SVGPath: Hashable {
             case "s", "S": command = try cubicTo()
             case "a", "A": command = try arc()
             case "z", "Z": command = try end()
-            default: throw SVGError.unexpectedToken(String(tkn))
+            case " ": return
+            default: throw SVGError.unexpectedToken(String(token))
             }
             appendCommand(command)
             if !numbers.isEmpty {
@@ -206,11 +203,11 @@ public struct SVGPath: Hashable {
                 }
                 number.append(".")
             case "-":
-                if number.last != "e" {
+                if let last = number.last, "eE".contains(last) {
+                    number.append(Character(char))
+                } else {
                     try processNumber()
                     number = "-"
-                } else {
-                    number.append(Character(char))
                 }
             case "a" ... "z", "A" ... "Z":
                 try processNumber()
