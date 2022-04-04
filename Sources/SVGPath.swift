@@ -243,20 +243,6 @@ public enum SVGError: Error, Hashable {
     }
 }
 
-public struct SVGArc: Hashable {
-    public var radius: SVGPoint
-    public var rotation: Double
-    public var largeArc: Bool
-    public var sweep: Bool
-    public var end: SVGPoint
-
-    fileprivate func relative(to last: SVGPoint) -> SVGArc {
-        var arc = self
-        arc.end = arc.end + last
-        return arc
-    }
-}
-
 public enum SVGCommand: Hashable {
     case moveTo(SVGPoint)
     case lineTo(SVGPoint)
@@ -338,5 +324,98 @@ public extension SVGPoint {
 
     static func - (lhs: SVGPoint, rhs: SVGPoint) -> SVGPoint {
         SVGPoint(x: lhs.x - rhs.x, y: lhs.y - rhs.y)
+    }
+}
+
+public struct SVGArc: Hashable {
+    public var radius: SVGPoint
+    public var rotation: Double
+    public var largeArc: Bool
+    public var sweep: Bool
+    public var end: SVGPoint
+}
+
+public extension SVGArc {
+    func asBezierPath(from currentPoint: SVGPoint) -> [SVGCommand] {
+        let px = currentPoint.x, py = currentPoint.y
+        var rx = abs(radius.x), ry = abs(radius.y)
+        let xr = rotation
+        let largeArcFlag = largeArc
+        let sweepFlag = sweep
+        let cx = end.x, cy = end.y
+        let sinphi = sin(xr), cosphi = cos(xr)
+
+        func vectorAngle(
+            _ ux: Double, _ uy: Double,
+            _ vx: Double, _ vy: Double
+        ) -> Double {
+            let sign = (ux * vy - uy * vx < 0) ? -1.0 : 1.0
+            let umag = sqrt(ux * ux + uy * uy), vmag = sqrt(vx * vx + vy * vy)
+            let dot = ux * vx + uy * vy
+            return sign * acos(max(-1, min(1, dot / (umag * vmag))))
+        }
+
+        func toEllipse(_ x: Double, _ y: Double) -> SVGPoint {
+            let x = x * rx, y = y * ry
+            let xp = cosphi * x - sinphi * y, yp = sinphi * x + cosphi * y
+            return SVGPoint(x: xp + centerx, y: yp + centery)
+        }
+
+        let dx = (px - cx) / 2, dy = (py - cy) / 2
+        let pxp = cosphi * dx + sinphi * dy, pyp = -sinphi * dx + cosphi * dy
+        if pxp == 0, pyp == 0 {
+            return []
+        }
+
+        let lambda = pow(pxp, 2) / pow(rx, 2) + pow(pyp, 2) / pow(ry, 2)
+        if lambda > 1 {
+            rx *= sqrt(lambda)
+            ry *= sqrt(lambda)
+        }
+
+        let rxsq = pow(rx, 2), rysq = pow(ry, 2)
+        let pxpsq = pow(pxp, 2), pypsq = pow(pyp, 2)
+
+        var radicant = max(0, rxsq * rysq - rxsq * pypsq - rysq * pxpsq)
+        radicant /= (rxsq * pypsq) + (rysq * pxpsq)
+        radicant = sqrt(radicant) * (largeArcFlag != sweepFlag ? -1 : 1)
+
+        let centerxp = radicant * rx / ry * pyp
+        let centeryp = radicant * -ry / rx * pxp
+
+        let centerx = cosphi * centerxp - sinphi * centeryp + (px + cx) / 2
+        let centery = sinphi * centerxp + cosphi * centeryp + (py + cy) / 2
+
+        let vx1 = (pxp - centerxp) / rx, vy1 = (pyp - centeryp) / ry
+        let vx2 = (-pxp - centerxp) / rx, vy2 = (-pyp - centeryp) / ry
+
+        var a1 = vectorAngle(1, 0, vx1, vy1)
+        var a2 = vectorAngle(vx1, vy1, vx2, vy2)
+        if sweepFlag, a2 > 0 {
+            a2 -= .pi * 2
+        } else if !sweepFlag, a2 < 0 {
+            a2 += .pi * 2
+        }
+
+        let segments = max(ceil(abs(a2) / (.pi / 2)), 1)
+        a2 /= segments
+        let a = 4 / 3 * tan(a2 / 4)
+        return (0 ..< Int(segments)).map { _ in
+            let x1 = cos(a1), y1 = sin(a1)
+            let x2 = cos(a1 + a2), y2 = sin(a1 + a2)
+
+            let p1 = toEllipse(x1 - y1 * a, y1 + x1 * a)
+            let p2 = toEllipse(x2 + y2 * a, y2 - x2 * a)
+            let p = toEllipse(x2, y2)
+
+            a1 += a2
+            return SVGCommand.cubic(p1, p2, p)
+        }
+    }
+
+    fileprivate func relative(to last: SVGPoint) -> SVGArc {
+        var arc = self
+        arc.end = arc.end + last
+        return arc
     }
 }
