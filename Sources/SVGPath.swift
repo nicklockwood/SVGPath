@@ -226,6 +226,20 @@ public struct SVGPath: Hashable {
     }
 }
 
+public extension SVGPath {
+    func getPoints(_ points: inout [SVGPoint], detail: Int) {
+        for command in commands {
+            command.getPoints(&points, detail: detail)
+        }
+    }
+
+    func points(withDetail detail: Int) -> [SVGPoint] {
+        var points = [SVGPoint]()
+        getPoints(&points, detail: detail)
+        return points
+    }
+}
+
 public enum SVGError: Error, Hashable {
     case unexpectedToken(String)
     case unexpectedArgument(for: String, expected: Int)
@@ -282,6 +296,69 @@ public extension SVGCommand {
             return control2
         case .moveTo, .lineTo, .quadratic, .arc, .end:
             return nil
+        }
+    }
+
+    func getPoints(_ points: inout [SVGPoint], detail: Int) {
+        var start: Int?
+        for (i, point) in points.enumerated() {
+            if let j = start {
+                if points[j] == point {
+                    start = nil
+                }
+            } else {
+                start = i
+            }
+        }
+
+        func endSubpath() {
+            if start == points.count - 1 {
+                points.removeLast()
+            } else if let start = start {
+                points.append(points[start])
+            }
+        }
+
+        let popLast = start != nil
+        let last = points.last ?? .zero
+
+        switch self {
+        case let .moveTo(point):
+            endSubpath()
+            points.append(point)
+        case let .lineTo(point):
+            if !popLast {
+                points.append(last)
+            }
+            points.append(point)
+        case let .cubic(control1, control2, point):
+            if popLast {
+                _ = points.popLast()
+            }
+            let step = 1.0 / Double(detail)
+            for t in stride(from: 0, through: 1.0, by: step) {
+                points.append(SVGPoint(
+                    x: cubicBezier(last.x, control1.x, control2.x, point.x, t),
+                    y: cubicBezier(last.y, control1.y, control2.y, point.y, t)
+                ))
+            }
+        case let .quadratic(control, point):
+            if popLast {
+                _ = points.popLast()
+            }
+            let step = 1.0 / Double(detail)
+            for t in stride(from: 0, through: 1.0, by: step) {
+                points.append(SVGPoint(
+                    x: quadraticBezier(last.x, control.x, point.x, t),
+                    y: quadraticBezier(last.y, control.y, point.y, t)
+                ))
+            }
+        case let .arc(arc):
+            for command in arc.asBezierPath(from: last) {
+                command.getPoints(&points, detail: detail)
+            }
+        case .end:
+            endSubpath()
         }
     }
 
@@ -418,4 +495,33 @@ public extension SVGArc {
         arc.end = arc.end + last
         return arc
     }
+}
+
+private func quadraticBezier(
+    _ p0: Double,
+    _ p1: Double,
+    _ p2: Double,
+    _ t: Double
+) -> Double {
+    let oneMinusT = 1 - t
+    let c0 = oneMinusT * oneMinusT * p0
+    let c1 = 2 * oneMinusT * t * p1
+    let c2 = t * t * p2
+    return c0 + c1 + c2
+}
+
+private func cubicBezier(
+    _ p0: Double,
+    _ p1: Double,
+    _ p2: Double,
+    _ p3: Double,
+    _ t: Double
+) -> Double {
+    let oneMinusT = 1 - t
+    let oneMinusTSquared = oneMinusT * oneMinusT
+    let c0 = oneMinusTSquared * oneMinusT * p0
+    let c1 = 3 * oneMinusTSquared * t * p1
+    let c2 = 3 * oneMinusT * t * t * p2
+    let c3 = t * t * t * p3
+    return c0 + c1 + c2 + c3
 }
