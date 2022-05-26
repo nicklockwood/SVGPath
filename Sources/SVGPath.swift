@@ -238,6 +238,75 @@ public extension SVGPath {
         getPoints(&points, detail: detail)
         return points
     }
+
+    struct WriteOptions {
+        public static let `default` = Self()
+
+        public var prettyPrinted: Bool
+        public var wrapWidth: Int
+
+        public init(prettyPrinted: Bool = true, wrapWidth: Int = .max) {
+            self.prettyPrinted = prettyPrinted
+            self.wrapWidth = wrapWidth
+        }
+    }
+
+    func string(with options: WriteOptions) -> String {
+        var output = ""
+        var width = 0
+
+        func append(_ string: String) {
+            let spaced = width > 0 && (
+                options.prettyPrinted ||
+                    (string.first?.isDigit ?? false) &&
+                    (output.last?.isDigit ?? false)
+            )
+
+            let w = string.count
+            if width + w + (spaced ? 1 : 0) > options.wrapWidth {
+                output += "\n"
+                width = 0
+            } else if spaced {
+                output += " "
+                width += 1
+            }
+            output += string
+            width += w
+        }
+
+        func append(_ cmd: String, _ numbers: Double...) {
+            append("\(cmd)\(String(format: "%g", numbers[0]))")
+            numbers.dropFirst().forEach { append(String(format: "%g", $0)) }
+        }
+
+        for command in commands {
+            switch command {
+            case let .moveTo(point):
+                append("M", point.x, point.y)
+            case let .lineTo(point):
+                append("L", point.x, point.y)
+            case let .cubic(c1, c2, point):
+                append("C", c1.x, c1.y, c2.x, c2.y, point.x, point.y)
+            case let .quadratic(control, point):
+                append("Q", control.x, control.y, point.x, point.y)
+            case let .arc(arc):
+                let rad = arc.radius, end = arc.end
+                let rot = arc.rotation / .pi * 180
+                let large = arc.largeArc ? 1.0 : 0
+                let sweep = arc.sweep ? 1.0 : 0
+                append("A", rad.x, rad.y, rot, large, sweep, end.x, end.y)
+            case .end:
+                append("Z")
+            }
+        }
+        return output
+    }
+}
+
+private extension Character {
+    var isDigit: Bool {
+        isASCII && isWholeNumber
+    }
 }
 
 public enum SVGError: Error, Hashable {

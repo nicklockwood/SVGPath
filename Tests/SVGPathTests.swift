@@ -43,11 +43,24 @@ class SVGPathTests: XCTestCase {
     }
 
     func testHeart() throws {
-        XCTAssertNoThrow(try SVGPath(string: """
+        let heart = try SVGPath(string: """
         M213.1,6.7c-32.4-14.4-73.7,0-88.1,30.6C110.6,4.9,67.5-9.5,36.9,6.7
         C2.8,22.9-13.4,62.4,13.5,110.9 C33.3,145.1,67.5,170.3,125,217
         c59.3-46.7,93.5-71.9,111.5-106.1C263.4,64.2,247.2,22.9,213.1,6.7z
-        """))
+        """)
+        var options = SVGPath.WriteOptions(wrapWidth: 72)
+        XCTAssertEqual(heart.string(with: options), """
+        M213.1 -6.7 C180.7 7.7 139.4 -6.7 125 -37.3 C110.6 -4.9 67.5 9.5 36.9
+        -6.7 C2.8 -22.9 -13.4 -62.4 13.5 -110.9 C33.3 -145.1 67.5 -170.3 125
+        -217 C184.3 -170.3 218.5 -145.1 236.5 -110.9 C263.4 -64.2 247.2 -22.9
+        213.1 -6.7 Z
+        """)
+        options.prettyPrinted = false
+        XCTAssertEqual(heart.string(with: options), """
+        M213.1-6.7C180.7 7.7 139.4-6.7 125-37.3C110.6-4.9 67.5 9.5 36.9-6.7C2.8
+        -22.9-13.4-62.4 13.5-110.9C33.3-145.1 67.5-170.3 125-217C184.3-170.3
+        218.5-145.1 236.5-110.9C263.4-64.2 247.2-22.9 213.1-6.7Z
+        """)
     }
 
     func testNumbersWithoutSeparator() throws {
