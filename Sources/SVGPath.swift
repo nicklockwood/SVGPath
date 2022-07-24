@@ -345,22 +345,6 @@ public extension SVGArc {
         let cx = end.x, cy = end.y
         let sinphi = sin(xr), cosphi = cos(xr)
 
-        func vectorAngle(
-            _ ux: Double, _ uy: Double,
-            _ vx: Double, _ vy: Double
-        ) -> Double {
-            let sign = (ux * vy - uy * vx < 0) ? -1.0 : 1.0
-            let umag = sqrt(ux * ux + uy * uy), vmag = sqrt(vx * vx + vy * vy)
-            let dot = ux * vx + uy * vy
-            return sign * acos(max(-1, min(1, dot / (umag * vmag))))
-        }
-
-        func toEllipse(_ x: Double, _ y: Double) -> SVGPoint {
-            let x = x * rx, y = y * ry
-            let xp = cosphi * x - sinphi * y, yp = sinphi * x + cosphi * y
-            return SVGPoint(x: xp + centerx, y: yp + centery)
-        }
-
         let dx = (px - cx) / 2, dy = (py - cy) / 2
         let pxp = cosphi * dx + sinphi * dy, pyp = -sinphi * dx + cosphi * dy
         if pxp == 0, pyp == 0 {
@@ -385,6 +369,22 @@ public extension SVGArc {
 
         let centerx = cosphi * centerxp - sinphi * centeryp + (px + cx) / 2
         let centery = sinphi * centerxp + cosphi * centeryp + (py + cy) / 2
+
+        func vectorAngle(
+            _ ux: Double, _ uy: Double,
+            _ vx: Double, _ vy: Double
+        ) -> Double {
+            let sign = (ux * vy - uy * vx < 0) ? -1.0 : 1.0
+            let umag = sqrt(ux * ux + uy * uy), vmag = sqrt(vx * vx + vy * vy)
+            let dot = ux * vx + uy * vy
+            return sign * acos(max(-1, min(1, dot / (umag * vmag))))
+        }
+
+        func toEllipse(_ x: Double, _ y: Double) -> SVGPoint {
+            let x = x * rx, y = y * ry
+            let xp = cosphi * x - sinphi * y, yp = sinphi * x + cosphi * y
+            return SVGPoint(x: xp + centerx, y: yp + centery)
+        }
 
         let vx1 = (pxp - centerxp) / rx, vy1 = (pyp - centeryp) / ry
         let vx2 = (-pxp - centerxp) / rx, vy2 = (-pyp - centeryp) / ry
