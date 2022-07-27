@@ -1,3 +1,7 @@
+## [1.1.1](https://github.com/nicklockwood/LRUCache/releases/tag/1.1.1) (2022-07-27)
+
+- Fixed bug where coordinates were flipped vertically when serializing path to string
+
 ## [1.1.0](https://github.com/nicklockwood/LRUCache/releases/tag/1.1.0) (2022-07-24)
 
 - Added `SVGPath(cgPath:)` initializer for converting `CGPath` to `SVGPath`

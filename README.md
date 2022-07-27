@@ -99,6 +99,8 @@ let detail = 10 // number of sample points used to represent curved segments
 let points = svgPath.points(withDetail: detail)
 ```
 
+**NOTE:** coordinates are stored with inverted Y coordinates internally, to match the coordinate system used by Core Graphics on macOS/iOS.
+
 
 # Credits
 
