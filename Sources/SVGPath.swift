@@ -282,19 +282,19 @@ public extension SVGPath {
         for command in commands {
             switch command {
             case let .moveTo(point):
-                append("M", point.x, point.y)
+                append("M", point.x, -point.y)
             case let .lineTo(point):
-                append("L", point.x, point.y)
+                append("L", point.x, -point.y)
             case let .cubic(c1, c2, point):
-                append("C", c1.x, c1.y, c2.x, c2.y, point.x, point.y)
+                append("C", c1.x, -c1.y, c2.x, -c2.y, point.x, -point.y)
             case let .quadratic(control, point):
-                append("Q", control.x, control.y, point.x, point.y)
+                append("Q", control.x, -control.y, point.x, -point.y)
             case let .arc(arc):
                 let rad = arc.radius, end = arc.end
                 let rot = arc.rotation / .pi * 180
                 let large = arc.largeArc ? 1.0 : 0
                 let sweep = arc.sweep ? 1.0 : 0
-                append("A", rad.x, rad.y, rot, large, sweep, end.x, end.y)
+                append("A", rad.x, rad.y, rot, large, sweep, end.x, -end.y)
             case .end:
                 append("Z")
             }
