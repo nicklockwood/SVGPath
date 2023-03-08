@@ -70,7 +70,7 @@ public struct SVGPath: Hashable {
         func lineToVertical() throws -> SVGCommand {
             let numbers = try assertArgs(1)
             return .lineTo(SVGPoint(
-                x: isRelative ? 0 : (commands.last?.point.x ?? 0),
+                x: isRelative ? 0 : commands.lastPoint.x,
                 y: -numbers[0]
             ))
         }
@@ -79,7 +79,7 @@ public struct SVGPath: Hashable {
             let numbers = try assertArgs(1)
             return .lineTo(SVGPoint(
                 x: numbers[0],
-                y: isRelative ? 0 : (commands.last?.point.y ?? 0)
+                y: isRelative ? 0 : commands.lastPoint.y
             ))
         }
 
@@ -161,8 +161,9 @@ public struct SVGPath: Hashable {
         }
 
         func appendCommand(_ command: SVGCommand) {
-            let last = isRelative ? commands.last : nil
-            commands.append(command.relative(to: last))
+            commands.append(
+                isRelative ? command.relative(to: commands.lastPoint) : command
+            )
         }
 
         func processCommand() throws {
@@ -309,6 +310,17 @@ private extension Character {
     }
 }
 
+private extension Array where Element == SVGCommand {
+    var lastPoint: SVGPoint {
+        for command in reversed() {
+            if let point = command.point {
+                return point
+            }
+        }
+        return .zero
+    }
+}
+
 public enum SVGError: Error, Hashable {
     case unexpectedToken(String)
     case unexpectedArgument(for: String, expected: Int)
@@ -336,7 +348,7 @@ public enum SVGCommand: Hashable {
 }
 
 public extension SVGCommand {
-    var point: SVGPoint {
+    var point: SVGPoint? {
         switch self {
         case let .moveTo(point),
              let .lineTo(point),
@@ -346,7 +358,7 @@ public extension SVGCommand {
         case let .arc(arc):
             return arc.end
         case .end:
-            return .zero
+            return nil
         }
     }
 
@@ -431,10 +443,7 @@ public extension SVGCommand {
         }
     }
 
-    fileprivate func relative(to last: SVGCommand?) -> SVGCommand {
-        guard let last = last?.point else {
-            return self
-        }
+    fileprivate func relative(to last: SVGPoint) -> SVGCommand {
         switch self {
         case let .moveTo(point):
             return .moveTo(point + last)
