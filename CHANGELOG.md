@@ -1,3 +1,7 @@
+## [1.1.3](https://github.com/nicklockwood/LRUCache/releases/tag/1.1.3) (2023-03-17)
+
+- Fixed bug with parsing paths that use a leading `+` as a delimiter between numbers
+
 ## [1.1.2](https://github.com/nicklockwood/LRUCache/releases/tag/1.1.2) (2023-03-08)
 
 - Fixed bug where relative coordinates were calculated incorrectly after an `end` command
