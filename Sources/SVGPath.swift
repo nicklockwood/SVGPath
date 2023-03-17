@@ -196,20 +196,18 @@ public struct SVGPath: Hashable {
 
         for char in string.unicodeScalars {
             switch char {
-            case "0" ... "9", "E", "e", "+":
+            case "0" ... "9", "E", "e":
                 number.append(Character(char))
             case ".":
                 if number.contains(".") {
                     try processNumber()
                 }
                 number.append(".")
-            case "-":
-                if let last = number.last, "eE".contains(last) {
-                    number.append(Character(char))
-                } else {
+            case "-", "+":
+                if let last = number.last, !"eE".contains(last) {
                     try processNumber()
-                    number = "-"
                 }
+                number.append(Character(char))
             case "a" ... "z", "A" ... "Z":
                 try processNumber()
                 try processCommand()

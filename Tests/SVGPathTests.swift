@@ -88,6 +88,16 @@ class SVGPathTests: XCTestCase {
         XCTAssertEqual(svgPath, expected)
     }
 
+    func testNumbersWithPlusAsSeparator() throws {
+        let svgPath = try SVGPath(string: "M0 0L.57+5Z")
+        let expected = SVGPath(commands: [
+            .moveTo(.zero),
+            .lineTo(.init(x: 0.57, y: -5)),
+            .end,
+        ])
+        XCTAssertEqual(svgPath, expected)
+    }
+
     func testAbsoluteHorizontalRule() throws {
         let svgPath = try SVGPath(string: "M0 0L10 10H0Z")
         let expected = SVGPath(commands: [
