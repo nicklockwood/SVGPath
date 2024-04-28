@@ -100,7 +100,7 @@ public struct SVGPath: Hashable {
             }
             var control = lastPoint - lastControl
             if !isRelative {
-                control = control + lastPoint
+                control += lastPoint
             }
             return .quadratic(control, SVGPoint(x: numbers[0], y: -numbers[1]))
         }
@@ -123,7 +123,7 @@ public struct SVGPath: Hashable {
             }
             var control = lastPoint - lastControl
             if !isRelative {
-                control = control + lastPoint
+                control += lastPoint
             }
             return .cubic(
                 control,
@@ -475,8 +475,16 @@ public extension SVGPoint {
         SVGPoint(x: lhs.x + rhs.x, y: lhs.y + rhs.y)
     }
 
+    static func += (lhs: inout SVGPoint, rhs: SVGPoint) {
+        lhs = lhs + rhs
+    }
+
     static func - (lhs: SVGPoint, rhs: SVGPoint) -> SVGPoint {
         SVGPoint(x: lhs.x - rhs.x, y: lhs.y - rhs.y)
+    }
+
+    static func -= (lhs: inout SVGPoint, rhs: SVGPoint) {
+        lhs = lhs - rhs
     }
 }
 
