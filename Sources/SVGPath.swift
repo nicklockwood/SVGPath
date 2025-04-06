@@ -160,44 +160,30 @@ public struct SVGPath: Hashable {
             throw SVGError.unexpectedToken(number)
         }
 
-        func appendCommand(_ command: SVGCommand) {
-            commands.append(
-                isRelative ? command.relative(to: commands) : command
-            )
-        }
-
         func processCommand() throws {
-            // Iterative instead of recursive to avoid stack overflow crashes in debug builds.
-            while try processCommandInner() {}
-        }
-
-        func processCommandInner() throws -> Bool {
-            let command: SVGCommand
-            switch token {
-            case "m", "M":
-                command = try moveTo()
-                if !numbers.isEmpty {
-                    appendCommand(command)
+            repeat {
+                let command: SVGCommand
+                switch token {
+                case "m", "M":
+                    command = try moveTo()
+                    // Treat as l/L for subsequent numbers
                     token = UnicodeScalar(token.value - 1)!
-                    return true
+                case "l", "L": command = try lineTo()
+                case "v", "V": command = try lineToVertical()
+                case "h", "H": command = try lineToHorizontal()
+                case "q", "Q": command = try quadCurve()
+                case "t", "T": command = try quadTo()
+                case "c", "C": command = try cubicCurve()
+                case "s", "S": command = try cubicTo()
+                case "a", "A": command = try arc()
+                case "z", "Z": command = try end()
+                case " ": return
+                default: throw SVGError.unexpectedToken(String(token))
                 }
-            case "l", "L": command = try lineTo()
-            case "v", "V": command = try lineToVertical()
-            case "h", "H": command = try lineToHorizontal()
-            case "q", "Q": command = try quadCurve()
-            case "t", "T": command = try quadTo()
-            case "c", "C": command = try cubicCurve()
-            case "s", "S": command = try cubicTo()
-            case "a", "A": command = try arc()
-            case "z", "Z": command = try end()
-            case " ": return false
-            default: throw SVGError.unexpectedToken(String(token))
-            }
-            appendCommand(command)
-            if !numbers.isEmpty {
-                return true
-            }
-            return false
+                commands.append(
+                    isRelative ? command.relative(to: commands) : command
+                )
+            } while !numbers.isEmpty
         }
 
         for char in string.unicodeScalars {
