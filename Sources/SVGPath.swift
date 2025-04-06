@@ -167,6 +167,11 @@ public struct SVGPath: Hashable {
         }
 
         func processCommand() throws {
+            // Iterative instead of recursive to avoid stack overflow crashes in debug builds.
+            while try processCommandInner() {}
+        }
+
+        func processCommandInner() throws -> Bool {
             let command: SVGCommand
             switch token {
             case "m", "M":
@@ -174,7 +179,7 @@ public struct SVGPath: Hashable {
                 if !numbers.isEmpty {
                     appendCommand(command)
                     token = UnicodeScalar(token.value - 1)!
-                    return try processCommand()
+                    return true
                 }
             case "l", "L": command = try lineTo()
             case "v", "V": command = try lineToVertical()
@@ -185,13 +190,14 @@ public struct SVGPath: Hashable {
             case "s", "S": command = try cubicTo()
             case "a", "A": command = try arc()
             case "z", "Z": command = try end()
-            case " ": return
+            case " ": return false
             default: throw SVGError.unexpectedToken(String(token))
             }
             appendCommand(command)
             if !numbers.isEmpty {
-                try processCommand()
+                return true
             }
+            return false
         }
 
         for char in string.unicodeScalars {
