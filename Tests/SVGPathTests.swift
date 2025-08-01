@@ -22,8 +22,7 @@ class SVGPathTests: XCTestCase {
     }
 
     func testCross() throws {
-        let svgPath =
-            try SVGPath(string: "M2 1 h1 v1 h1 v1 h-1 v1 h-1 v-1 h-1 v-1 h1 z")
+        let svgPath = try SVGPath(string: "M2 1 h1 v1 h1 v1 h-1 v1 h-1 v-1 h-1 v-1 h1 z")
         let expected = SVGPath(commands: [
             .moveTo(.init(x: 2, y: -1)),
             .lineTo(.init(x: 3, y: -1)),
@@ -110,9 +109,7 @@ class SVGPathTests: XCTestCase {
     }
 
     func testTrailingNumber() throws {
-        XCTAssertThrowsError(try SVGPath(
-            string: "M150 0 L75 200 L225 200 Z5"
-        )) { error in
+        XCTAssertThrowsError(try SVGPath(string: "M150 0 L75 200 L225 200 Z5")) { error in
             XCTAssertEqual(
                 error as? SVGError,
                 .unexpectedArgument(for: "Z", expected: 0)

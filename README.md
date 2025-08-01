@@ -28,7 +28,7 @@ SVGPath is packaged as a dynamic framework that you can import into your Xcode p
 To install using Swift Package Manage, add this to the `dependencies:` section in your Package.swift file:
 
 ```swift
-.package(url: "https://github.com/nicklockwood/SVGPath.git", .upToNextMinor(from: "1.0.0")),
+.package(url: "https://github.com/nicklockwood/SVGPath.git", .upToNextMinor(from: "1.1.0")),
 ```
 
 

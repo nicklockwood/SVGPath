@@ -47,11 +47,9 @@ public struct SVGPath: Hashable, Sendable {
 
         func assertArgs(_ count: Int) throws -> [Double] {
             if numbers.count < count {
-                throw SVGError
-                    .missingArgument(for: String(token), expected: count)
+                throw SVGError.missingArgument(for: String(token), expected: count)
             } else if !numbers.count.isMultiple(of: count) {
-                throw SVGError
-                    .unexpectedArgument(for: String(token), expected: count)
+                throw SVGError.unexpectedArgument(for: String(token), expected: count)
             }
             defer { numbers.removeFirst(count) }
             return Array(numbers.prefix(count))
@@ -180,9 +178,7 @@ public struct SVGPath: Hashable, Sendable {
                 case " ": return
                 default: throw SVGError.unexpectedToken(String(token))
                 }
-                commands.append(
-                    isRelative ? command.relative(to: commands) : command
-                )
+                commands.append(isRelative ? command.relative(to: commands) : command)
             } while !numbers.isEmpty
         }
 
@@ -300,7 +296,7 @@ private extension Character {
     }
 }
 
-private extension Array where Element == SVGCommand {
+private extension [SVGCommand] {
     var lastPoint: SVGPoint {
         for command in reversed() {
             if let point = command.point {
@@ -401,7 +397,7 @@ public extension SVGCommand {
         func endSubpath() {
             if start == points.count - 1 {
                 points.removeLast()
-            } else if let start = start {
+            } else if let start {
                 points.append(points[start])
             }
         }
