@@ -31,7 +31,11 @@
 
 import Foundation
 
-public struct SVGPath: Hashable {
+#if swift(<5.7)
+public protocol Sendable {}
+#endif
+
+public struct SVGPath: Hashable, Sendable {
     public var commands: [SVGCommand]
 
     public init(commands: [SVGCommand]) {
@@ -230,7 +234,7 @@ public extension SVGPath {
         return points
     }
 
-    struct WriteOptions {
+    struct WriteOptions: Sendable {
         public static let `default` = Self()
 
         public var prettyPrinted: Bool
@@ -335,7 +339,7 @@ public enum SVGError: Error, Hashable {
     }
 }
 
-public enum SVGCommand: Hashable {
+public enum SVGCommand: Hashable, Sendable {
     case moveTo(SVGPoint)
     case lineTo(SVGPoint)
     case cubic(SVGPoint, SVGPoint, SVGPoint)
@@ -469,7 +473,7 @@ public extension SVGCommand {
     }
 }
 
-public struct SVGPoint: Hashable {
+public struct SVGPoint: Hashable, Sendable {
     public var x, y: Double
 
     public init(x: Double, y: Double) {
@@ -498,7 +502,7 @@ public extension SVGPoint {
     }
 }
 
-public struct SVGArc: Hashable {
+public struct SVGArc: Hashable, Sendable {
     public var radius: SVGPoint
     public var rotation: Double
     public var largeArc: Bool
