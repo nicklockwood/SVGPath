@@ -208,7 +208,7 @@ class SVGPathTests: XCTestCase {
         XCTAssertEqual(svgPath, expected)
     }
 
-    #if swift(>=5.5)
+    #if !os(WASI)
     @available(iOS 13.0, macOS 10.15, *)
     func testLongStringWithSmallStackSize() async throws {
         // Previous implementation of `SVGPath(string:)` was recursive and could

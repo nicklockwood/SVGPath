@@ -31,10 +31,6 @@
 
 import Foundation
 
-#if swift(<5.7)
-public protocol Sendable {}
-#endif
-
 public struct SVGPath: Hashable, Sendable {
     public var commands: [SVGCommand]
 
