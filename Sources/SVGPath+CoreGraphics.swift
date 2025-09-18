@@ -37,8 +37,8 @@ import Foundation
 // MARK: SVGPath to CGPath
 
 public extension CGPath {
-    static func from(svgPath: String) throws -> CGPath {
-        try from(svgPath: SVGPath(string: svgPath))
+    static func from(svgPath: String, with options: SVGPath.ParseOptions = .default) throws -> CGPath {
+        try from(svgPath: SVGPath(string: svgPath, with: options))
     }
 
     static func from(svgPath: SVGPath) -> CGPath {
