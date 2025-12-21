@@ -9,7 +9,7 @@
 import SVGPath
 import XCTest
 
-class SVGPathTests: XCTestCase {
+final class SVGPathTests: XCTestCase {
     func testTriangleWithoutInvertingYAxis() throws {
         let parseOptions = SVGPath.ParseOptions(invertYAxis: false)
         let svgPath = try SVGPath(string: "M150 0 L75 200 L225 200 Z", with: parseOptions)

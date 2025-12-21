@@ -85,7 +85,7 @@ private func XCTAssertEqual(
     }
 }
 
-class CGPathTests: XCTestCase {
+final class CGPathTests: XCTestCase {
     func testTriangle() throws {
         let svgPath = try SVGPath(string: "M150 0 L75 200 L225 200 Z")
         let cgPath = CGMutablePath()

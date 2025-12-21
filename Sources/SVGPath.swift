@@ -369,15 +369,6 @@ public extension SVGCommand {
         }
     }
 
-    private var startPoint: SVGPoint? {
-        switch self {
-        case let .moveTo(point):
-            return point
-        default:
-            return nil
-        }
-    }
-
     var control1: SVGPoint? {
         switch self {
         case let .cubic(control1, _, _), let .quadratic(control1, _):
