@@ -10,6 +10,21 @@ import SVGPath
 import XCTest
 
 class SVGPathTests: XCTestCase {
+    func testTriangleWithoutInvertingYAxis() throws {
+        let parseOptions = SVGPath.ParseOptions(invertYAxis: false)
+        let svgPath = try SVGPath(string: "M150 0 L75 200 L225 200 Z", with: parseOptions)
+        let expected = SVGPath(commands: [
+            .moveTo(.init(x: 150, y: 0)),
+            .lineTo(.init(x: 75, y: 200)),
+            .lineTo(.init(x: 225, y: 200)),
+            .end,
+        ])
+        XCTAssertEqual(svgPath, expected)
+
+        let writeOptions = SVGPath.WriteOptions(invertYAxis: false)
+        XCTAssertEqual(svgPath.string(with: writeOptions), "M150 0 L75 200 L225 200 Z")
+    }
+
     func testTriangle() throws {
         let svgPath = try SVGPath(string: "M150 0 L75 200 L225 200 Z")
         let expected = SVGPath(commands: [

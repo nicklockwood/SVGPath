@@ -38,12 +38,23 @@ public struct SVGPath: Hashable, Sendable {
         self.commands = commands
     }
 
-    public init(string: String) throws {
+    public struct ParseOptions: Sendable {
+        public static let `default` = Self()
+
+        public var invertYAxis: Bool
+
+        public init(invertYAxis: Bool = true) {
+            self.invertYAxis = invertYAxis
+        }
+    }
+
+    public init(string: String, with options: ParseOptions = .default) throws {
         var token: UnicodeScalar = " "
         var commands = [SVGCommand]()
         var numbers = ArraySlice<Double>()
         var number = ""
         var isRelative = false
+        let yAxisSign = options.invertYAxis ? -1.0 : 1.0
 
         func assertArgs(_ count: Int) throws -> [Double] {
             if numbers.count < count {
@@ -57,19 +68,19 @@ public struct SVGPath: Hashable, Sendable {
 
         func moveTo() throws -> SVGCommand {
             let numbers = try assertArgs(2)
-            return .moveTo(SVGPoint(x: numbers[0], y: -numbers[1]))
+            return .moveTo(SVGPoint(x: numbers[0], y: yAxisSign * numbers[1]))
         }
 
         func lineTo() throws -> SVGCommand {
             let numbers = try assertArgs(2)
-            return .lineTo(SVGPoint(x: numbers[0], y: -numbers[1]))
+            return .lineTo(SVGPoint(x: numbers[0], y: yAxisSign * numbers[1]))
         }
 
         func lineToVertical() throws -> SVGCommand {
             let numbers = try assertArgs(1)
             return .lineTo(SVGPoint(
                 x: isRelative ? 0 : commands.lastPoint.x,
-                y: -numbers[0]
+                y: yAxisSign * numbers[0]
             ))
         }
 
@@ -84,8 +95,8 @@ public struct SVGPath: Hashable, Sendable {
         func quadCurve() throws -> SVGCommand {
             let numbers = try assertArgs(4)
             return .quadratic(
-                SVGPoint(x: numbers[0], y: -numbers[1]),
-                SVGPoint(x: numbers[2], y: -numbers[3])
+                SVGPoint(x: numbers[0], y: yAxisSign * numbers[1]),
+                SVGPoint(x: numbers[2], y: yAxisSign * numbers[3])
             )
         }
 
@@ -100,15 +111,15 @@ public struct SVGPath: Hashable, Sendable {
             if !isRelative {
                 control += lastPoint
             }
-            return .quadratic(control, SVGPoint(x: numbers[0], y: -numbers[1]))
+            return .quadratic(control, SVGPoint(x: numbers[0], y: yAxisSign * numbers[1]))
         }
 
         func cubicCurve() throws -> SVGCommand {
             let numbers = try assertArgs(6)
             return .cubic(
-                SVGPoint(x: numbers[0], y: -numbers[1]),
-                SVGPoint(x: numbers[2], y: -numbers[3]),
-                SVGPoint(x: numbers[4], y: -numbers[5])
+                SVGPoint(x: numbers[0], y: yAxisSign * numbers[1]),
+                SVGPoint(x: numbers[2], y: yAxisSign * numbers[3]),
+                SVGPoint(x: numbers[4], y: yAxisSign * numbers[5])
             )
         }
 
@@ -125,8 +136,8 @@ public struct SVGPath: Hashable, Sendable {
             }
             return .cubic(
                 control,
-                SVGPoint(x: numbers[0], y: -numbers[1]),
-                SVGPoint(x: numbers[2], y: -numbers[3])
+                SVGPoint(x: numbers[0], y: yAxisSign * numbers[1]),
+                SVGPoint(x: numbers[2], y: yAxisSign * numbers[3])
             )
         }
 
@@ -137,7 +148,7 @@ public struct SVGPath: Hashable, Sendable {
                 rotation: numbers[2] * .pi / 180,
                 largeArc: numbers[3] != 0,
                 sweep: numbers[4] != 0,
-                end: SVGPoint(x: numbers[5], y: -numbers[6])
+                end: SVGPoint(x: numbers[5], y: yAxisSign * numbers[6])
             ))
         }
 
@@ -231,16 +242,19 @@ public extension SVGPath {
 
         public var prettyPrinted: Bool
         public var wrapWidth: Int
+        public var invertYAxis: Bool
 
-        public init(prettyPrinted: Bool = true, wrapWidth: Int = .max) {
+        public init(prettyPrinted: Bool = true, wrapWidth: Int = .max, invertYAxis: Bool = true) {
             self.prettyPrinted = prettyPrinted
             self.wrapWidth = wrapWidth
+            self.invertYAxis = invertYAxis
         }
     }
 
     func string(with options: WriteOptions) -> String {
         var output = ""
         var width = 0
+        let yAxisSign = options.invertYAxis ? -1.0 : 1.0
 
         func append(_ string: String) {
             let spaced = width > 0 && (
@@ -269,19 +283,19 @@ public extension SVGPath {
         for command in commands {
             switch command {
             case let .moveTo(point):
-                append("M", point.x, -point.y)
+                append("M", point.x, yAxisSign * point.y)
             case let .lineTo(point):
-                append("L", point.x, -point.y)
+                append("L", point.x, yAxisSign * point.y)
             case let .cubic(c1, c2, point):
-                append("C", c1.x, -c1.y, c2.x, -c2.y, point.x, -point.y)
+                append("C", c1.x, yAxisSign * c1.y, c2.x, yAxisSign * c2.y, point.x, yAxisSign * point.y)
             case let .quadratic(control, point):
-                append("Q", control.x, -control.y, point.x, -point.y)
+                append("Q", control.x, yAxisSign * control.y, point.x, yAxisSign * point.y)
             case let .arc(arc):
                 let rad = arc.radius, end = arc.end
                 let rot = arc.rotation / .pi * 180
                 let large = arc.largeArc ? 1.0 : 0
                 let sweep = arc.sweep ? 1.0 : 0
-                append("A", rad.x, rad.y, rot, large, sweep, end.x, -end.y)
+                append("A", rad.x, rad.y, rot, large, sweep, end.x, yAxisSign * end.y)
             case .end:
                 append("Z")
             }
