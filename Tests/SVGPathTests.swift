@@ -10,6 +10,27 @@ import SVGPath
 import XCTest
 
 class SVGPathTests: XCTestCase {
+    func testLineLength() throws {
+        let svgPath = try SVGPath(string: "M0 0 H100 V50")
+        
+        let expected = 150.0
+        let measured = svgPath.length(withDetail: 32)
+        
+        XCTAssertEqual(measured, expected, accuracy: 0.0)
+    }
+    
+    func testArcLengthWithHalfCircle() throws {
+        let svgPath = try SVGPath(
+            string: "M100 0 A100 100 0 0 1 0 100 A100 100 0 0 1 -100 0"
+        )
+
+        let expected = Double.pi * 100
+        let measured = svgPath.length(withDetail: 32)
+        print("Measured: \(measured)  Expected: \(expected)")
+
+        XCTAssertEqual(measured, expected, accuracy: 0.5)
+    }
+    
     func testTriangleWithoutInvertingYAxis() throws {
         let parseOptions = SVGPath.ParseOptions(invertYAxis: false)
         let svgPath = try SVGPath(string: "M150 0 L75 200 L225 200 Z", with: parseOptions)

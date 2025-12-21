@@ -236,6 +236,10 @@ public extension SVGPath {
         getPoints(&points, detail: detail)
         return points
     }
+    
+    func length(withDetail detail: Int) -> Double {
+        return points(withDetail: detail).length
+    }
 
     struct WriteOptions: Sendable {
         public static let `default` = Self()
@@ -301,6 +305,25 @@ public extension SVGPath {
             }
         }
         return output
+    }
+}
+
+public extension Array<SVGPoint> {
+    var length: Double {
+        guard self.count > 1 else { return 0 }
+        
+        var length: Double = 0
+        var prev = self[0]
+        
+        for i in 1..<self.count {
+            let p = self[i]
+            let dx = p.x - prev.x
+            let dy = p.y - prev.y
+            length += (dx * dx + dy * dy).squareRoot()
+            prev = p
+        }
+        
+        return length
     }
 }
 
