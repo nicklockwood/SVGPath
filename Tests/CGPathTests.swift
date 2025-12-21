@@ -159,12 +159,12 @@ final class CGPathTests: XCTestCase {
     }
 
     func testTrailingNumber() throws {
-        XCTAssertThrowsError(try SVGPath(
-            string: "M150 0 L75 200 L225 200 Z5"
-        )) { error in
+        let path = "M150 0 L75 200 L225 200 Z5"
+        let index = try XCTUnwrap(path.lastIndex(of: "Z"))
+        XCTAssertThrowsError(try SVGPath(string: path)) { error in
             XCTAssertEqual(
                 error as? SVGError,
-                .unexpectedArgument(for: "Z", expected: 0)
+                .unexpectedArgument(for: "Z", at: index, expected: 0)
             )
         }
     }

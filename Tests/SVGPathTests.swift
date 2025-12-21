@@ -157,10 +157,45 @@ final class SVGPathTests: XCTestCase {
     }
 
     func testTrailingNumber() throws {
-        XCTAssertThrowsError(try SVGPath(string: "M150 0 L75 200 L225 200 Z5")) { error in
+        let path = "M150 0 L75 200 L225 200 Z5"
+        let index = try XCTUnwrap(path.lastIndex(of: "Z"))
+        XCTAssertThrowsError(try SVGPath(string: path)) { error in
             XCTAssertEqual(
                 error as? SVGError,
-                .unexpectedArgument(for: "Z", expected: 0)
+                .unexpectedArgument(for: "Z", at: index, expected: 0)
+            )
+        }
+    }
+
+    func testExtraArgument() throws {
+        let path = "M150 0 L75 200 L225 200 300 Z"
+        let index = try XCTUnwrap(path.lastIndex(of: "L"))
+        XCTAssertThrowsError(try SVGPath(string: path)) { error in
+            XCTAssertEqual(
+                error as? SVGError,
+                .unexpectedArgument(for: "L", at: index, expected: 2)
+            )
+        }
+    }
+
+    func testMissingArgument() throws {
+        let path = "M150 0 L75 200 L Z"
+        let index = try XCTUnwrap(path.lastIndex(of: "L"))
+        XCTAssertThrowsError(try SVGPath(string: path)) { error in
+            XCTAssertEqual(
+                error as? SVGError,
+                .missingArgument(for: "L", at: index, expected: 2)
+            )
+        }
+    }
+
+    func testTruncatedInput() throws {
+        let path = "M150 0 L75 200 L"
+        let index = try XCTUnwrap(path.lastIndex(of: "L"))
+        XCTAssertThrowsError(try SVGPath(string: path)) { error in
+            XCTAssertEqual(
+                error as? SVGError,
+                .missingArgument(for: "L", at: index, expected: 2)
             )
         }
     }

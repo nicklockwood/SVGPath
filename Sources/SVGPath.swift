@@ -49,7 +49,8 @@ public struct SVGPath: Hashable, Sendable {
     }
 
     public init(string: String, with options: ParseOptions = .default) throws {
-        var token: UnicodeScalar = " "
+        var index = string.startIndex
+        var token = UnicodeScalar(" ")
         var commands = [SVGCommand]()
         var numbers = ArraySlice<Double>()
         var number = ""
@@ -58,9 +59,9 @@ public struct SVGPath: Hashable, Sendable {
 
         func assertArgs(_ count: Int) throws -> [Double] {
             if numbers.count < count {
-                throw SVGError.missingArgument(for: String(token), expected: count)
+                throw SVGError.missingArgument(for: String(token), at: index, expected: count)
             } else if !numbers.count.isMultiple(of: count) {
-                throw SVGError.unexpectedArgument(for: String(token), expected: count)
+                throw SVGError.unexpectedArgument(for: String(token), at: index, expected: count)
             }
             defer { numbers.removeFirst(count) }
             return Array(numbers.prefix(count))
@@ -167,7 +168,8 @@ public struct SVGPath: Hashable, Sendable {
                 number = ""
                 return
             }
-            throw SVGError.unexpectedToken(number)
+            let index = string.range(of: number, range: index ..< string.endIndex)?.lowerBound ?? index
+            throw SVGError.unexpectedToken(number, at: index)
         }
 
         func processCommand() throws {
@@ -188,13 +190,15 @@ public struct SVGPath: Hashable, Sendable {
                 case "a", "A": command = try arc()
                 case "z", "Z": command = try end()
                 case " ": return
-                default: throw SVGError.unexpectedToken(String(token))
+                default: throw SVGError.unexpectedToken(String(token), at: index)
                 }
                 commands.append(isRelative ? command.relative(to: commands) : command)
             } while !numbers.isEmpty
         }
 
-        for char in string.unicodeScalars {
+        let unicodeScalars = string.unicodeScalars
+        for i in unicodeScalars.indices {
+            let char = unicodeScalars[i]
             switch char {
             case "0" ... "9", "E", "e":
                 number.append(Character(char))
@@ -211,12 +215,13 @@ public struct SVGPath: Hashable, Sendable {
             case "a" ... "z", "A" ... "Z":
                 try processNumber()
                 try processCommand()
+                index = i
                 token = char
                 isRelative = char > "Z"
             case " ", "\r", "\n", "\t", ",":
                 try processNumber()
             default:
-                throw SVGError.unexpectedToken(String(char))
+                throw SVGError.unexpectedToken(String(char), at: i)
             }
         }
         try processNumber()
@@ -330,18 +335,47 @@ private extension [SVGCommand] {
 }
 
 public enum SVGError: Error, Hashable {
-    case unexpectedToken(String)
-    case unexpectedArgument(for: String, expected: Int)
-    case missingArgument(for: String, expected: Int)
+    case unexpectedToken(String, at: String.Index)
+    case unexpectedArgument(for: String, at: String.Index, expected: Int)
+    case missingArgument(for: String, at: String.Index, expected: Int)
+}
 
-    public var message: String {
+public extension SVGError {
+    var message: String {
         switch self {
-        case let .unexpectedToken(string):
+        case let .unexpectedToken(string, _):
             return "Unexpected token '\(string)'"
-        case let .unexpectedArgument(command, _):
+        case let .unexpectedArgument(command, _, _):
             return "Too many arguments for '\(command)'"
-        case let .missingArgument(command, _):
+        case let .missingArgument(command, _, _):
             return "Missing argument for '\(command)'"
+        }
+    }
+
+    var hint: String? {
+        switch self {
+        case .unexpectedToken:
+            return nil
+        case let .unexpectedArgument(command, _, expected: expected):
+            switch expected {
+            case 0: return "The '\(command)' command does not expect any arguments"
+            case 1: return "The '\(command)' command expects only one argument"
+            default: return "The '\(command)' command expects only \(expected) arguments"
+            }
+        case let .missingArgument(command, _, expected: expected):
+            switch expected {
+            case 1: return "The '\(command)' command requires one argument"
+            default: return "The '\(command)' command requires \(expected) arguments"
+            }
+        }
+    }
+
+    var index: String.Index {
+        switch self {
+        case let .unexpectedToken(_, index),
+             let .unexpectedArgument(_, index, _),
+             let .missingArgument(_, index, _):
+            return index
         }
     }
 }
