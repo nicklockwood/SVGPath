@@ -308,22 +308,21 @@ public extension SVGPath {
     }
 }
 
-public extension Array<SVGPoint> {
+public extension Collection where Element == SVGPoint {
     var length: Double {
-        guard self.count > 1 else { return 0 }
-        
-        var length: Double = 0
-        var prev = self[0]
-        
-        for i in 1..<self.count {
-            let p = self[i]
-            let dx = p.x - prev.x
-            let dy = p.y - prev.y
-            length += (dx * dx + dy * dy).squareRoot()
+        var it = makeIterator()
+        guard var prev = it.next() else { return 0 }
+
+        var total: Double = 0
+
+        while let p = it.next() {
+            let dx = Double(p.x - prev.x)
+            let dy = Double(p.y - prev.y)
+            total += (dx * dx + dy * dy).squareRoot()
             prev = p
         }
-        
-        return length
+
+        return total
     }
 }
 
