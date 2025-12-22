@@ -15,7 +15,7 @@ import XCTest
 private extension CGPath {
     var elements: [CGPathElement] {
         var elements = [CGPathElement]()
-        enumerate { elements.append($0) }
+        applyWithBlock { elements.append($0.pointee) }
         return elements
     }
 }

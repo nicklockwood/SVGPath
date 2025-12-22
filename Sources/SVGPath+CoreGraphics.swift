@@ -86,20 +86,21 @@ private extension CGMutablePath {
 public extension SVGPath {
     init(cgPath: CGPath) {
         var commands = [SVGCommand]()
-        cgPath.enumerate {
+        cgPath.applyWithBlock {
+            let points = $0.pointee.points
             let command: SVGCommand
-            switch $0.type {
+            switch $0.pointee.type {
             case .moveToPoint:
-                command = .moveTo(SVGPoint($0.points[0]))
+                command = .moveTo(SVGPoint(points[0]))
             case .closeSubpath:
                 command = .end
             case .addLineToPoint:
-                command = .lineTo(SVGPoint($0.points[0]))
+                command = .lineTo(SVGPoint(points[0]))
             case .addQuadCurveToPoint:
-                let p1 = $0.points[0], p2 = $0.points[1]
+                let p1 = points[0], p2 = points[1]
                 command = .quadratic(SVGPoint(p1), SVGPoint(p2))
             case .addCurveToPoint:
-                let p1 = $0.points[0], p2 = $0.points[1], p3 = $0.points[2]
+                let p1 = points[0], p2 = points[1], p3 = points[2]
                 command = .cubic(SVGPoint(p1), SVGPoint(p2), SVGPoint(p3))
             @unknown default:
                 return
@@ -113,31 +114,6 @@ public extension SVGPath {
 public extension SVGPoint {
     init(_ cgPoint: CGPoint) {
         self.init(x: Double(cgPoint.x), y: Double(cgPoint.y))
-    }
-}
-
-extension CGPath {
-    func enumerate(_ fn: @convention(block) (CGPathElement) -> Void) {
-        if #available(iOS 11.0, tvOS 11.0, OSX 10.13, *) {
-            applyWithBlock { fn($0.pointee) }
-            return
-        }
-
-        // Fallback for earlier OSes
-        typealias Block = @convention(block) (CGPathElement) -> Void
-        let callback: @convention(c) (
-            UnsafeMutableRawPointer,
-            UnsafePointer<CGPathElement>
-        ) -> Void = { info, element in
-            unsafeBitCast(info, to: Block.self)(element.pointee)
-        }
-        withoutActuallyEscaping(fn) { block in
-            let block = unsafeBitCast(block, to: UnsafeMutableRawPointer.self)
-            self.apply(info: block, function: unsafeBitCast(
-                callback,
-                to: CGPathApplierFunction.self
-            ))
-        }
     }
 }
 
