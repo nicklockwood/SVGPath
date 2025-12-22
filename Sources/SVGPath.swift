@@ -143,11 +143,12 @@ public struct SVGPath: Hashable, Sendable {
 
         func arc() throws -> SVGCommand {
             let numbers = try assertArgs(7)
+            let sweep = numbers[4] != 0
             return .arc(SVGArc(
                 radius: SVGPoint(x: numbers[0], y: numbers[1]),
                 rotation: numbers[2] * .pi / 180,
                 largeArc: numbers[3] != 0,
-                sweep: numbers[4] != 0,
+                sweep: options.invertYAxis ? !sweep : sweep,
                 end: SVGPoint(x: numbers[5], y: yAxisSign * numbers[6])
             ))
         }
@@ -251,7 +252,7 @@ public extension SVGPath {
         }
     }
 
-    func string(with options: WriteOptions) -> String {
+    func string(with options: WriteOptions = .default) -> String {
         var output = ""
         var width = 0
         let yAxisSign = options.invertYAxis ? -1.0 : 1.0
@@ -294,7 +295,7 @@ public extension SVGPath {
                 let rad = arc.radius, end = arc.end
                 let rot = arc.rotation / .pi * 180
                 let large = arc.largeArc ? 1.0 : 0
-                let sweep = arc.sweep ? 1.0 : 0
+                let sweep = arc.sweep == options.invertYAxis ? 0 : 1.0
                 append("A", rad.x, rad.y, rot, large, sweep, end.x, yAxisSign * end.y)
             case .end:
                 append("Z")
@@ -512,8 +513,6 @@ public extension SVGArc {
         let px = currentPoint.x, py = currentPoint.y
         var rx = abs(radius.x), ry = abs(radius.y)
         let xr = -rotation
-        let largeArcFlag = largeArc
-        let sweepFlag = sweep
         let cx = end.x, cy = end.y
         let sinphi = sin(xr), cosphi = cos(xr)
 
@@ -534,7 +533,7 @@ public extension SVGArc {
 
         var radicant = max(0, rxsq * rysq - rxsq * pypsq - rysq * pxpsq)
         radicant /= (rxsq * pypsq) + (rysq * pxpsq)
-        radicant = sqrt(radicant) * (largeArcFlag != sweepFlag ? -1 : 1)
+        radicant = sqrt(radicant) * (largeArc == sweep ? -1 : 1)
 
         let centerxp = radicant * rx / ry * pyp
         let centeryp = radicant * -ry / rx * pxp
@@ -563,10 +562,10 @@ public extension SVGArc {
 
         var a1 = vectorAngle(1, 0, vx1, vy1)
         var a2 = vectorAngle(vx1, vy1, vx2, vy2)
-        if sweepFlag, a2 > 0 {
-            a2 -= .pi * 2
-        } else if !sweepFlag, a2 < 0 {
+        if sweep, a2 < 0 {
             a2 += .pi * 2
+        } else if !sweep, a2 > 0 {
+            a2 -= .pi * 2
         }
 
         let segments = max(ceil(abs(a2) / (.pi / 2)), 1)

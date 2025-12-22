@@ -6,10 +6,21 @@
 //  Copyright © 2022 Nick Lockwood. All rights reserved.
 //
 
-import SVGPath
+@testable import SVGPath
 import XCTest
 
 final class SVGPathTests: XCTestCase {
+    func testTriangle() throws {
+        let svgPath = try SVGPath(string: "M150 0 L75 200 L225 200 Z")
+        let expected = SVGPath(commands: [
+            .moveTo(.init(x: 150, y: 0)),
+            .lineTo(.init(x: 75, y: -200)),
+            .lineTo(.init(x: 225, y: -200)),
+            .end,
+        ])
+        XCTAssertEqual(svgPath, expected)
+    }
+
     func testTriangleWithoutInvertingYAxis() throws {
         let parseOptions = SVGPath.ParseOptions(invertYAxis: false)
         let svgPath = try SVGPath(string: "M150 0 L75 200 L225 200 Z", with: parseOptions)
@@ -25,15 +36,37 @@ final class SVGPathTests: XCTestCase {
         XCTAssertEqual(svgPath.string(with: writeOptions), "M150 0 L75 200 L225 200 Z")
     }
 
-    func testTriangle() throws {
-        let svgPath = try SVGPath(string: "M150 0 L75 200 L225 200 Z")
+    func testArc() throws {
+        let svgPath = try SVGPath(string: "A50 50 180 1 1 60 0")
         let expected = SVGPath(commands: [
-            .moveTo(.init(x: 150, y: 0)),
-            .lineTo(.init(x: 75, y: -200)),
-            .lineTo(.init(x: 225, y: -200)),
-            .end,
+            .arc(.init(
+                radius: .init(x: 50.0, y: 50.0),
+                rotation: .pi,
+                largeArc: true,
+                sweep: false,
+                end: .init(x: 60.0, y: 0.0)
+            )),
         ])
         XCTAssertEqual(svgPath, expected)
+        XCTAssertEqual(svgPath.string(), "A50 50 180 1 1 60 0")
+    }
+
+    func testArcWithoutInvertingYAxis() throws {
+        let parseOptions = SVGPath.ParseOptions(invertYAxis: false)
+        let svgPath = try SVGPath(string: "A50 50 180 1 1 60 0", with: parseOptions)
+        let expected = SVGPath(commands: [
+            .arc(.init(
+                radius: .init(x: 50.0, y: 50.0),
+                rotation: .pi,
+                largeArc: true,
+                sweep: true,
+                end: .init(x: 60.0, y: 0.0)
+            )),
+        ])
+        XCTAssertEqual(svgPath, expected)
+
+        let writeOptions = SVGPath.WriteOptions(invertYAxis: false)
+        XCTAssertEqual(svgPath.string(with: writeOptions), "A50 50 180 1 1 60 0")
     }
 
     func testCross() throws {
