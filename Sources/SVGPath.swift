@@ -31,16 +31,22 @@
 
 import Foundation
 
+/// An SVG path structure.
 public struct SVGPath: Hashable, Sendable {
+    /// The array of commands that form the path.
     public var commands: [SVGCommand]
 
+    /// Create an `SVGPath` from an array of commands.
+    /// - Parameter commands: An array of  commands.
     public init(commands: [SVGCommand]) {
         self.commands = commands
     }
 
+    /// A set of options to control how the SVG path data should be interpreted.
     public struct ParseOptions: Sendable {
         public static let `default` = Self()
 
+        /// Whether the `SVGPath` data should be flipped vertically.
         public var invertYAxis: Bool
 
         public init(invertYAxis: Bool = true) {
@@ -48,6 +54,10 @@ public struct SVGPath: Hashable, Sendable {
         }
     }
 
+    /// Create an `SVGPath` from an SVG path string.
+    /// - Parameters:
+    ///   - string: The SVG path string.
+    ///   - options: An optional `ParseOptions` configuration.
     public init(string: String, with options: ParseOptions = .default) throws {
         var index = string.startIndex
         var token = UnicodeScalar(" ")
@@ -231,23 +241,33 @@ public struct SVGPath: Hashable, Sendable {
 }
 
 public extension SVGPath {
-    func getPoints(_ points: inout [SVGPoint], detail: Int) {
-        for command in commands {
-            command.getPoints(&points, detail: detail)
-        }
-    }
-
+    /// Get an array of points representing the path.
+    /// - Parameter detail: How many points to use for curved path sections. Use a greater value for higher fidelity.
     func points(withDetail detail: Int) -> [SVGPoint] {
         var points = [SVGPoint]()
         getPoints(&points, detail: detail)
         return points
     }
 
+    /// Copy the path's points into an existing array. This is more efficient than allocating a new array for each call.
+    /// - Parameters:
+    ///   - points: An `inout` array to copy the points into.
+    ///   - detail: How many points to use for curved path sections. Use a greater value for higher fidelity.
+    func getPoints(_ points: inout [SVGPoint], detail: Int) {
+        for command in commands {
+            command.getPoints(&points, detail: detail)
+        }
+    }
+
+    /// A set of options to control how the SVG path string should be constructed.
     struct WriteOptions: Sendable {
         public static let `default` = Self()
 
+        /// Should the string be output using spaces for better readability?
         public var prettyPrinted: Bool
+        /// The character width at which to wrap the path string onto a new line.
         public var wrapWidth: Int
+        /// Whether the Y values in the path should be flipped vertically when exporting.
         public var invertYAxis: Bool
 
         public init(prettyPrinted: Bool = true, wrapWidth: Int = .max, invertYAxis: Bool = true) {
@@ -257,6 +277,8 @@ public extension SVGPath {
         }
     }
 
+    /// Create an SVG path string from the `SVGPath` object.
+    /// - Parameter options: An optional `WriteOptions` configuration.
     func string(with options: WriteOptions = .default) -> String {
         var output = ""
         var width = 0
@@ -334,6 +356,7 @@ private extension [SVGCommand] {
     }
 }
 
+/// An error thrown for invalid SVG path input.
 public enum SVGError: Error, Hashable {
     case unexpectedToken(String, at: String.Index)
     case unexpectedArgument(for: String, at: String.Index, expected: Int)
@@ -341,6 +364,7 @@ public enum SVGError: Error, Hashable {
 }
 
 public extension SVGError {
+    /// A human-readable error message.
     var message: String {
         switch self {
         case let .unexpectedToken(string, _):
@@ -352,6 +376,7 @@ public extension SVGError {
         }
     }
 
+    /// Additonal error info.
     var hint: String? {
         switch self {
         case .unexpectedToken:
@@ -370,6 +395,7 @@ public extension SVGError {
         }
     }
 
+    /// The index within the SVG path string where parsing failed.
     var index: String.Index {
         switch self {
         case let .unexpectedToken(_, index),
@@ -380,6 +406,7 @@ public extension SVGError {
     }
 }
 
+/// An SVG path command. All SVG paths consist of a sequence of these commands.
 public enum SVGCommand: Hashable, Sendable {
     case moveTo(SVGPoint)
     case lineTo(SVGPoint)
@@ -390,6 +417,7 @@ public enum SVGCommand: Hashable, Sendable {
 }
 
 public extension SVGCommand {
+    /// The location of the last point added by this command.
     var point: SVGPoint? {
         switch self {
         case let .moveTo(point),
@@ -404,6 +432,7 @@ public extension SVGCommand {
         }
     }
 
+    /// The first (or only) control point for a Bezier curve command.
     var control1: SVGPoint? {
         switch self {
         case let .cubic(control1, _, _), let .quadratic(control1, _):
@@ -413,6 +442,7 @@ public extension SVGCommand {
         }
     }
 
+    /// The second control point for a cubic Bezier curve command
     var control2: SVGPoint? {
         switch self {
         case let .cubic(_, control2, _):
@@ -422,6 +452,10 @@ public extension SVGCommand {
         }
     }
 
+    /// Get an array of points representing the path section for this command.
+    /// - Parameters:
+    ///   - points: An `inout` array to copy the points into.
+    ///   - detail: How many points to use for curved path sections. Use a greater value for higher fidelity.
     func getPoints(_ points: inout [SVGPoint], detail: Int) {
         var start: Int?
         for (i, point) in points.enumerated() {
@@ -505,6 +539,7 @@ public extension SVGCommand {
     }
 }
 
+/// A 2D point on an SVG path.
 public struct SVGPoint: Hashable, Sendable {
     public var x, y: Double
 
@@ -534,6 +569,7 @@ public extension SVGPoint {
     }
 }
 
+/// A 2D arc for an SVG path.
 public struct SVGArc: Hashable, Sendable {
     public var radius: SVGPoint
     public var rotation: Double
@@ -543,6 +579,7 @@ public struct SVGArc: Hashable, Sendable {
 }
 
 public extension SVGArc {
+    /// Convert an `SVGArc` to a sequence of Bezier curve commands.
     func asBezierPath(from currentPoint: SVGPoint) -> [SVGCommand] {
         let px = currentPoint.x, py = currentPoint.y
         var rx = abs(radius.x), ry = abs(radius.y)

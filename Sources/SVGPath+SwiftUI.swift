@@ -31,45 +31,26 @@
 
 #if canImport(SwiftUI)
 
-import CoreGraphics
 import SwiftUI
 
 // MARK: SVGPath to SwiftUI Path
 
 @available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
 public extension Path {
-    init(_ svgPath: SVGPath, in rect: CGRect? = nil) {
-        var cgPath = CGPath.from(svgPath)
-        if let rect {
-            let bounds = cgPath.boundingBoxOfPath
-            let target = bounds.scaledToFit(in: rect)
-            var transform = CGAffineTransform.identity
-                .translatedBy(x: target.minX - bounds.minX, y: target.minY - bounds.minY)
-                .scaledBy(x: target.width / bounds.width, y: target.height / bounds.height)
-            cgPath = cgPath.copy(using: &transform) ?? cgPath
-        }
-        self.init(cgPath)
-    }
-
+    /// Create a SwiftUI `Path` from an SVG path string.
+    /// - Parameters:
+    ///   - svgPath: The SVG path string.
+    ///   - rect: An optional rectangle that the path should be scaled to fit inside.
     init(svgPath: String, in rect: CGRect? = nil) throws {
         try self.init(SVGPath(string: svgPath, with: .init(invertYAxis: false)), in: rect)
     }
-}
 
-private extension CGRect {
-    func scaledToFit(in rect: CGRect) -> CGRect {
-        var scale = rect.width / width
-        if height * scale > rect.height {
-            scale = rect.height / height
-        }
-        let width = width * scale
-        let height = height * scale
-        return .init(
-            x: rect.midX - width / 2,
-            y: rect.midY - height / 2,
-            width: width,
-            height: height
-        )
+    /// Create a SwiftUI `Path` from an `SVGPath` instance.
+    /// - Parameters:
+    ///   - svgPath: The `SVGPath` instance to convert to a `Path`.
+    ///   - rect: An optional rectangle that the path should be scaled to fit inside.
+    init(_ svgPath: SVGPath, in rect: CGRect? = nil) {
+        self.init(CGPath.from(svgPath, in: rect))
     }
 }
 
@@ -77,6 +58,8 @@ private extension CGRect {
 
 @available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
 public extension SVGPath {
+    /// Create an `SVGPath` from a SwiftUI `Path`.
+    /// - Parameter path: The SwiftUI `Path` to convert.
     init(_ path: Path) {
         self.init(path.cgPath)
     }

@@ -32,22 +32,38 @@
 #if canImport(CoreGraphics)
 
 import CoreGraphics
-import Foundation
 
 // MARK: SVGPath to CGPath
 
 public extension CGPath {
-    static func from(svgPath: String) throws -> CGPath {
-        try from(SVGPath(string: svgPath))
+    /// Create a `CGPath` from an SVG path string.
+    /// - Parameters:
+    ///   - svgPath: The SVG path string.
+    ///   - rect: An optional rectangle that the path should be scaled to fit inside.
+    static func from(svgPath: String, in rect: CGRect? = nil) throws -> CGPath {
+        try from(SVGPath(string: svgPath), in: rect)
     }
 
-    static func from(_ svgPath: SVGPath) -> CGPath {
+    /// Create a `CGPath` from an `SVGPath` instance.
+    /// - Parameters:
+    ///   - svgPath: The `SVGPath` instance to convert to a `CGPath`.
+    ///   - rect: An optional rectangle that the path should be scaled to fit inside.
+    static func from(_ svgPath: SVGPath, in rect: CGRect? = nil) -> CGPath {
         let path = CGMutablePath()
         path.move(to: .zero)
         svgPath.commands.forEach(path.addCommand)
-        return path
+        guard let rect else {
+            return path
+        }
+        let bounds = path.boundingBoxOfPath
+        let target = bounds.scaledToFit(in: rect)
+        var transform = CGAffineTransform.identity
+            .translatedBy(x: target.minX - bounds.minX, y: target.minY - bounds.minY)
+            .scaledBy(x: target.width / bounds.width, y: target.height / bounds.height)
+        return path.copy(using: &transform) ?? path
     }
 
+    /// Deprecated.
     @available(*, deprecated, renamed: "from(_:)")
     static func from(svgPath: SVGPath) -> CGPath {
         from(svgPath)
@@ -55,6 +71,8 @@ public extension CGPath {
 }
 
 public extension CGPoint {
+    /// Create a `CGPoint` from an `SVGPoint`.
+    /// - Parameter svgPoint: The `SVGPoint` to convert.
     init(_ svgPoint: SVGPoint) {
         self.init(x: svgPoint.x, y: svgPoint.y)
     }
@@ -86,9 +104,28 @@ private extension CGMutablePath {
     }
 }
 
+private extension CGRect {
+    func scaledToFit(in rect: CGRect) -> CGRect {
+        var scale = rect.width / width
+        if height * scale > rect.height {
+            scale = rect.height / height
+        }
+        let width = width * scale
+        let height = height * scale
+        return .init(
+            x: rect.midX - width / 2,
+            y: rect.midY - height / 2,
+            width: width,
+            height: height
+        )
+    }
+}
+
 // MARK: CGPath to SVGPath
 
 public extension SVGPath {
+    /// Create an `SVGPath` from a `CGPath`.
+    /// - Parameter cgPath: The `CGPath` to convert.
     init(_ cgPath: CGPath) {
         var commands = [SVGCommand]()
         cgPath.applyWithBlock {
@@ -122,6 +159,8 @@ public extension SVGPath {
 }
 
 public extension SVGPoint {
+    /// Create an `SVGPoint` from a `CGPoint`.
+    /// - Parameter cgPoint: The `CGPoint` to convert.
     init(_ cgPoint: CGPoint) {
         self.init(x: Double(cgPoint.x), y: Double(cgPoint.y))
     }
