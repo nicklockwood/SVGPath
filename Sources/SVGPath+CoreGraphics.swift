@@ -38,14 +38,19 @@ import Foundation
 
 public extension CGPath {
     static func from(svgPath: String) throws -> CGPath {
-        try from(svgPath: SVGPath(string: svgPath))
+        try from(SVGPath(string: svgPath))
     }
 
-    static func from(svgPath: SVGPath) -> CGPath {
+    static func from(_ svgPath: SVGPath) -> CGPath {
         let path = CGMutablePath()
         path.move(to: .zero)
         svgPath.commands.forEach(path.addCommand)
         return path
+    }
+
+    @available(*, deprecated, renamed: "from(_:)")
+    static func from(svgPath: SVGPath) -> CGPath {
+        from(svgPath)
     }
 }
 
@@ -84,7 +89,7 @@ private extension CGMutablePath {
 // MARK: CGPath to SVGPath
 
 public extension SVGPath {
-    init(cgPath: CGPath) {
+    init(_ cgPath: CGPath) {
         var commands = [SVGCommand]()
         cgPath.applyWithBlock {
             let points = $0.pointee.points
@@ -108,6 +113,11 @@ public extension SVGPath {
             commands.append(command)
         }
         self.init(commands: commands)
+    }
+
+    @available(*, deprecated, renamed: "init(_:)")
+    init(cgPath: CGPath) {
+        self.init(cgPath)
     }
 }
 
