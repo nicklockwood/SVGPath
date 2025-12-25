@@ -14,6 +14,7 @@
 		0172A96A2EFB491900EA4685 /* SVGPath.framework in Copy Frameworks (1 item) */ = {isa = PBXBuildFile; fileRef = 016FAB2921BFE78100AF60DC /* SVGPath.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		0172A96C2EFB4A0600EA4685 /* SVGPath+SwiftUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0172A96B2EFB4A0600EA4685 /* SVGPath+SwiftUI.swift */; };
 		018DD26D2EFD433500DF2725 /* ExampleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 018DD26B2EFD433500DF2725 /* ExampleApp.swift */; };
+		018DD26F2EFD48C700DF2725 /* SwiftUIPathTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 018DD26E2EFD48C700DF2725 /* SwiftUIPathTests.swift */; };
 		01E677802B5BE299005594D6 /* MetadataTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01E6777F2B5BE299005594D6 /* MetadataTests.swift */; };
 		0A240137256A64FB00C1535C /* SVGPathTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A240136256A64FB00C1535C /* SVGPathTests.swift */; };
 		0A24013F256A671600C1535C /* SVGPath.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A24013E256A671600C1535C /* SVGPath.swift */; };
@@ -60,6 +61,7 @@
 		0172A95B2EFB47A800EA4685 /* SVGExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SVGExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0172A96B2EFB4A0600EA4685 /* SVGPath+SwiftUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SVGPath+SwiftUI.swift"; sourceTree = "<group>"; };
 		018DD26B2EFD433500DF2725 /* ExampleApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExampleApp.swift; sourceTree = "<group>"; };
+		018DD26E2EFD48C700DF2725 /* SwiftUIPathTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIPathTests.swift; sourceTree = "<group>"; };
 		01E6777F2B5BE299005594D6 /* MetadataTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetadataTests.swift; sourceTree = "<group>"; };
 		0A240136256A64FB00C1535C /* SVGPathTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SVGPathTests.swift; sourceTree = "<group>"; };
 		0A24013E256A671600C1535C /* SVGPath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SVGPath.swift; sourceTree = "<group>"; };
@@ -138,6 +140,7 @@
 			children = (
 				0A240136256A64FB00C1535C /* SVGPathTests.swift */,
 				0148ECA92789CA5B00B3F836 /* CGPathTests.swift */,
+				018DD26E2EFD48C700DF2725 /* SwiftUIPathTests.swift */,
 				01E6777F2B5BE299005594D6 /* MetadataTests.swift */,
 				016FAB3921BFE78100AF60DC /* Info.plist */,
 			);
@@ -334,6 +337,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				018DD26F2EFD48C700DF2725 /* SwiftUIPathTests.swift in Sources */,
 				0148ECAA2789CA5B00B3F836 /* CGPathTests.swift in Sources */,
 				0A240137256A64FB00C1535C /* SVGPathTests.swift in Sources */,
 				01E677802B5BE299005594D6 /* MetadataTests.swift in Sources */,

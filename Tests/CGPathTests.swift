@@ -12,79 +12,6 @@ import CoreGraphics
 @testable import SVGPath
 import XCTest
 
-private extension CGPath {
-    var elements: [CGPathElement] {
-        var elements = [CGPathElement]()
-        applyWithBlock { elements.append($0.pointee) }
-        return elements
-    }
-}
-
-private func XCTAssertEqual(
-    _ lhs: @autoclosure () throws -> [CGPathElement],
-    _ rhs: @autoclosure () throws -> [CGPathElement],
-    file: StaticString = #file,
-    line: UInt = #line
-) {
-    XCTAssertNoThrow(_ = try lhs(), file: file, line: line)
-    XCTAssertNoThrow(_ = try rhs(), file: file, line: line)
-    if let lhs = try? lhs(), let rhs = try? rhs() {
-        for (lhs, rhs) in zip(lhs, rhs) {
-            XCTAssertEqual(
-                lhs.type.rawValue,
-                rhs.type.rawValue,
-                file: file,
-                line: line
-            )
-            guard lhs.type == rhs.type else {
-                return
-            }
-            switch lhs.type {
-            case .addCurveToPoint:
-                XCTAssertEqual(
-                    lhs.points[2],
-                    rhs.points[2],
-                    file: file,
-                    line: line
-                )
-                fallthrough
-            case .addQuadCurveToPoint:
-                XCTAssertEqual(
-                    lhs.points[1],
-                    rhs.points[1],
-                    file: file,
-                    line: line
-                )
-                fallthrough
-            case .moveToPoint, .addLineToPoint:
-                XCTAssertEqual(
-                    lhs.points[0],
-                    rhs.points[0],
-                    file: file,
-                    line: line
-                )
-            case .closeSubpath:
-                break
-            @unknown default:
-                break
-            }
-        }
-    }
-}
-
-private func XCTAssertEqual(
-    _ lhs: @autoclosure () throws -> CGPath,
-    _ rhs: @autoclosure () throws -> CGPath,
-    file: StaticString = #file,
-    line: UInt = #line
-) {
-    XCTAssertNoThrow(_ = try lhs(), file: file, line: line)
-    XCTAssertNoThrow(_ = try rhs(), file: file, line: line)
-    if let lhs = try? lhs(), let rhs = try? rhs() {
-        XCTAssertEqual(lhs.elements, rhs.elements, file: file, line: line)
-    }
-}
-
 final class CGPathTests: XCTestCase {
     func testTriangle() throws {
         let svgPath = try SVGPath(string: "M150 0 L75 200 L225 200 Z")
@@ -200,6 +127,79 @@ final class CGPathTests: XCTestCase {
         cgPath.closeSubpath()
         XCTAssertEqual(.from(svgPath), cgPath)
         XCTAssertEqual(SVGPath(cgPath), svgPath)
+    }
+}
+
+private extension CGPath {
+    var elements: [CGPathElement] {
+        var elements = [CGPathElement]()
+        applyWithBlock { elements.append($0.pointee) }
+        return elements
+    }
+}
+
+private func XCTAssertEqual(
+    _ lhs: @autoclosure () throws -> [CGPathElement],
+    _ rhs: @autoclosure () throws -> [CGPathElement],
+    file: StaticString = #file,
+    line: UInt = #line
+) {
+    XCTAssertNoThrow(_ = try lhs(), file: file, line: line)
+    XCTAssertNoThrow(_ = try rhs(), file: file, line: line)
+    if let lhs = try? lhs(), let rhs = try? rhs() {
+        for (lhs, rhs) in zip(lhs, rhs) {
+            XCTAssertEqual(
+                lhs.type.rawValue,
+                rhs.type.rawValue,
+                file: file,
+                line: line
+            )
+            guard lhs.type == rhs.type else {
+                return
+            }
+            switch lhs.type {
+            case .addCurveToPoint:
+                XCTAssertEqual(
+                    lhs.points[2],
+                    rhs.points[2],
+                    file: file,
+                    line: line
+                )
+                fallthrough
+            case .addQuadCurveToPoint:
+                XCTAssertEqual(
+                    lhs.points[1],
+                    rhs.points[1],
+                    file: file,
+                    line: line
+                )
+                fallthrough
+            case .moveToPoint, .addLineToPoint:
+                XCTAssertEqual(
+                    lhs.points[0],
+                    rhs.points[0],
+                    file: file,
+                    line: line
+                )
+            case .closeSubpath:
+                break
+            @unknown default:
+                break
+            }
+        }
+    }
+}
+
+private func XCTAssertEqual(
+    _ lhs: @autoclosure () throws -> CGPath,
+    _ rhs: @autoclosure () throws -> CGPath,
+    file: StaticString = #file,
+    line: UInt = #line
+) {
+    XCTAssertNoThrow(_ = try lhs(), file: file, line: line)
+    XCTAssertNoThrow(_ = try rhs(), file: file, line: line)
+    if let lhs = try? lhs(), let rhs = try? rhs() {
+        XCTAssertEqual(lhs.elements, rhs.elements, file: file, line: line)
     }
 }
 
