@@ -746,6 +746,15 @@ final class SVGPathTests: XCTestCase {
         XCTAssertTrue(svgPath.commands.isEmpty)
     }
 
+    func testFormFeedWhitespace() throws {
+        let svgPath = try SVGPath(string: "M0\u{000C}0\u{000C}L10\u{000C}10")
+        let expected = SVGPath(commands: [
+            .moveTo(.zero),
+            .lineTo(.init(x: 10, y: -10)),
+        ])
+        XCTAssertEqual(svgPath, expected)
+    }
+
     func testMultipleMoves() throws {
         let svgPath = try SVGPath(string: "M0 0 M10 10 M20 20")
         XCTAssertEqual(svgPath.commands.count, 3)

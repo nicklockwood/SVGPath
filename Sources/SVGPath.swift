@@ -237,7 +237,7 @@ public struct SVGPath: Hashable, Sendable {
                 index = i
                 token = char
                 isRelative = char > "Z"
-            case " ", "\r", "\n", "\t", ",":
+            case " ", "\r", "\n", "\t", "\u{000C}", ",":
                 try processNumber()
             default:
                 throw SVGError.unexpectedToken(String(char), at: i)
