@@ -304,6 +304,17 @@ final class SVGPathTests: XCTestCase {
         XCTAssertEqual(svgPath, expected)
     }
 
+    func testRelativeCommandAfterEndUsesSubpathStart() throws {
+        let svgPath = try SVGPath(string: "M0 0 L10 0 Z l5 5", with: .init(invertYAxis: false))
+        let expected = SVGPath(commands: [
+            .moveTo(.zero),
+            .lineTo(.init(x: 10, y: 0)),
+            .end,
+            .lineTo(.init(x: 5, y: 5)),
+        ])
+        XCTAssertEqual(svgPath, expected)
+    }
+
     // MARK: - SVGPoint Tests
 
     func testSVGPointAddition() {

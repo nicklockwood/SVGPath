@@ -352,6 +352,8 @@ private extension [SVGCommand] {
         for command in reversed() {
             if let point = command.point {
                 return point
+            } else if command == .end {
+                return lastMove
             }
         }
         return .zero
