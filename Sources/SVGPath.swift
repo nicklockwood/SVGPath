@@ -522,7 +522,7 @@ public extension SVGCommand {
     fileprivate func relative(to commands: [SVGCommand]) -> SVGCommand {
         switch self {
         case let .moveTo(point):
-            return .moveTo(point + commands.lastMove)
+            return .moveTo(point + commands.lastPoint)
         case let .lineTo(point):
             return .lineTo(point + commands.lastPoint)
         case let .cubic(control1, control2, point):
