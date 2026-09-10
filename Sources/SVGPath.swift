@@ -173,6 +173,15 @@ public struct SVGPath: Hashable, Sendable {
             if number.isEmpty {
                 return
             }
+            while ["a", "A"].contains(token),
+                  [3, 4].contains(numbers.count % 7),
+                  let flag = number.first,
+                  "01".contains(flag),
+                  number.count > 1
+            {
+                numbers.append(flag == "1" ? 1 : 0)
+                number.removeFirst()
+            }
             if let double = Double(number) {
                 numbers.append(double)
                 number = ""

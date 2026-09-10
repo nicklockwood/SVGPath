@@ -69,6 +69,22 @@ final class SVGPathTests: XCTestCase {
         XCTAssertEqual(svgPath.string(with: writeOptions), "A50 50 180 1 1 60 0")
     }
 
+    func testArcWithOmittedFlagSeparators() throws {
+        let parseOptions = SVGPath.ParseOptions(invertYAxis: false)
+        let svgPath = try SVGPath(string: "M0 0 A10 10 0 0110 10", with: parseOptions)
+        let expected = SVGPath(commands: [
+            .moveTo(.zero),
+            .arc(.init(
+                radius: .init(x: 10, y: 10),
+                rotation: 0,
+                largeArc: false,
+                sweep: true,
+                end: .init(x: 10, y: 10)
+            )),
+        ])
+        XCTAssertEqual(svgPath, expected)
+    }
+
     func testCross() throws {
         let svgPath = try SVGPath(string: "M2 1 h1 v1 h1 v1 h-1 v1 h-1 v-1 h-1 v-1 h1 z")
         let expected = SVGPath(commands: [
